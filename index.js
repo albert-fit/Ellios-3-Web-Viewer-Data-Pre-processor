@@ -54,7 +54,7 @@ fromDir(
     //Write it to a js file too.
     fs.writeFileSync(
       `${parentDirectory}/${flightDirectory}/${flightDirectory}.js`,
-      "var data = " + JSON.stringify(potreeData) + ";"
+      `var flight_${flightDirectory.replace(/-/g, "_")} = ${JSON.stringify(potreeData)}'`
     );
     console.log(`${parentDirectory}/${flightDirectory}/${flightDirectory}.js created.`)
   }
