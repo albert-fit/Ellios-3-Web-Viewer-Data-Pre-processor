@@ -8,6 +8,7 @@ Usage:
  - Download or clone the repository;
  - Run npm install to install the modules;
  - Set the parentDirectory as the directory where you downloaded all the flights folders for the project; 
- - Set the flightsDirectories as an array with the names of all the flights 
+ - Run node index.js;
+    - The JSON files will be generated in the same folder as the liveTraj.csv files, with the same name as the folder.
 
 Thank you for using this utility!
