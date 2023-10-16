@@ -1,0 +1,14 @@
+{
+  "name": "potree-csv-to-json",
+  "version": "1.0.0",
+  "description": "a module that converts csv to json with papaparse",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Albert Fit",
+  "license": "ISC",
+  "dependencies": {
+    "papaparse": "^5.4.1"
+  }
+}
