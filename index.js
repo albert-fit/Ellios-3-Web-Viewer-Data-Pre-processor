@@ -1,6 +1,7 @@
 // First, read the csv file that you would like to convert to json.
 var path = require("path");
 var fs = require("fs");
+
 var papaparse = require("papaparse");
 
 function fromDir(startPath, filter, callback) {
@@ -21,20 +22,9 @@ function fromDir(startPath, filter, callback) {
 
 var parentDirectory = "/Users/Albert/Desktop/elliosDelivery/data/F5901/";
 
-var flightsDirectories = [
-  "096-southc-F1-02",
-  "085-north-F1-00",
-  "086-north-F1-01",
-  "087-north-F1-02",
-  "088-north-F1-03",
-  "089-north-F1-04",
-  "090-north-F1-05",
-  "091-southrhs-F1-00",
-  "092-southrhs-F1-01",
-  "093-southrhs-F1-02",
-  "094-southb-F1-03",
-  "095-southb-F1-01"
-];
+var flightsDirectories = fs.readdirSync(parentDirectory, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name)
 
 flightsDirectories.forEach(function (flightDirectory) {
 fromDir(
