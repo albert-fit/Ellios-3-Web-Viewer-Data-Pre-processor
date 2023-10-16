@@ -24,8 +24,11 @@ var potreeData = csvData.data.map(function (row) {
 }
 );
 
+var exportedFilePathJSON = "example.json";
+var exportedFilePathJS = "example.js";
+
 // Write the data to a json file.
-fs.writeFileSync("example.json", JSON.stringify(potreeData));
+fs.writeFileSync(exportedFilePathJSON, JSON.stringify(potreeData));
 
 //Write it to a js file too.
-fs.writeFileSync("example.js", "var data = " + JSON.stringify(potreeData) + ";");
+fs.writeFileSync(exportedFilePathJS, "var data = " + JSON.stringify(potreeData) + ";");
