@@ -3,10 +3,9 @@ const path = require('path');
 const { promisify } = require('util');
 const papaparse = require('papaparse');
 
-const directoryPath = '/YOUR DIRECTORY PATH'; // Replace with your actual directory path
+const directoryPath = '/Users/Albert/Desktop/elliosDelivery/data/F5901/'; // Replace with your actual directory path
 
 const outputJson = [];
-var potreeData = [];
 
 const copyFile = promisify(fs.copyFile);
 
@@ -30,6 +29,7 @@ function extractVideoOffsetAndRotation(jsonFilePath) {
       y: 0,
       z: -0.7071067690849304,
     };
+
     return { video_offset, rotation };
   } catch (error) {
     console.error(`Big Error reading or parsing .json file: ${jsonFilePath}`);
@@ -48,23 +48,62 @@ function findElfFile(dirPath) {
   return null; // Return null if no .efly file is found
 }
 
+function findCSVFile(dirPath) {
+    const files = fs.readdirSync(dirPath);
+    
+    for (const file of files) {
+        if (file.endsWith('.csv')) {
+        return path.join(dirPath, file);
+        }
+    }
+    return null; // Return null if no .csv file is found
+    }
+
 async function populateJson(dirPath, parentName = '') {
   const eflyFile = findElfFile(dirPath);
+  const csvFile = findCSVFile(dirPath);
 
   if (!eflyFile) {
     console.error(`No .efly file found in directory: ${dirPath}`);
     return;
   }
 
+  if (!csvFile) {
+    console.error(`No .csv file found in directory: ${dirPath}`);
+    return;
+  }
+  
   const name = path.basename(eflyFile, '.efly');
   const url = path.join(parentName, name, 'metadata.json');
   const trajFile = path.join(parentName, name, `${name}.js`);
   const trajVar = `flight_${name.replace(/[^a-zA-Z0-9]/g, '_')}`;
   const jsonCopyFilePath = path.join(dirPath, `${name}.json`);
-  const liveTraj = potreeData
-
+  var liveTraj = [];
+  fromDir(
+    dirPath,
+    /\livetraj.csv$/,
+    function (filename) {
+      console.log("-- found: ", filename);
+      var csvFile = fs.readFileSync(filename, "utf8");
+      // Parse the CSV file using papaparse.
+      var csvData = papaparse.parse(csvFile, { header: true, delimiter: " " });
+      // Format the data to be used in potree:
+      liveTraj = csvData.data.map(function (row) {
+        return {
+          timestamp: parseFloat(row[(key = "timestamp[s]")]),
+          pos_x: parseFloat(row[(key = "pos_x[m]")]),
+          pos_y: parseFloat(row[(key = "pos_y[m]")]),
+          pos_z: parseFloat(row[(key = "pos_z[m]")]),
+          rot_x: parseFloat(row[(key = "rot_x")]),
+          rot_y: parseFloat(row[(key = "rot_y")]),
+          rot_z: parseFloat(row[(key = "rot_z")]),
+          rot_w: parseFloat(row[(key = "rot_w")]),
+        };
+      });})
+    
   try {
     await copyElfFileToJSON(eflyFile, jsonCopyFilePath);
+
     const { video_offset, rotation } = extractVideoOffsetAndRotation(jsonCopyFilePath);
     const entry = {
       name,
@@ -97,53 +136,10 @@ function fromDir(startPath, filter, callback) {
   }
 }
 
-async function parseCSVToJSONAndJS(csvDirectory, flightDirectory) {
-  fromDir(
-    csvDirectory,
-    /\livetraj.csv$/,
-    function (filename) {
-      console.log("-- found: ", filename);
-      var csvFile = fs.readFileSync(filename, "utf8");
-      // Parse the CSV file using papaparse.
-      var csvData = papaparse.parse(csvFile, { header: true, delimiter: " " });
-      // Format the data to be used in potree:
-      potreeData = csvData.data.map(function (row) {
-        return {
-          timestamp: parseFloat(row[(key = "timestamp[s]")]),
-          pos_x: parseFloat(row[(key = "pos_x[m]")]),
-          pos_y: parseFloat(row[(key = "pos_y[m]")]),
-          pos_z: parseFloat(row[(key = "pos_z[m]")]),
-          rot_x: parseFloat(row[(key = "rot_x")]),
-          rot_y: parseFloat(row[(key = "rot_y")]),
-          rot_z: parseFloat(row[(key = "rot_z")]),
-          rot_w: parseFloat(row[(key = "rot_w")]),
-        };
-      });
-   
-      // Write it to a JS file too.
-      const jsFilePath = path.join(csvDirectory, `${flightDirectory}.js`);
-      fs.writeFileSync(
-        jsFilePath,
-        `var flight_${flightDirectory.replace(/-/g, "_")} = ${JSON.stringify(potreeData)}`
-      );
-      console.log(`${jsFilePath} created.`);
-    }
-  );
-}
-
-// Define the parent directory for CSV files
-const parentCSVDirectory = directoryPath;
 
 // Look only in subdirectories of directoryPath
 const subdirectories = fs.readdirSync(directoryPath);
 (async () => {
-  for (const subdirectory of subdirectories) {
-    const subdirectoryPath = path.join(directoryPath, subdirectory);
-    const subdirectoryStats = fs.statSync(subdirectoryPath);
-    if (subdirectoryStats.isDirectory()) {
-      await parseCSVToJSONAndJS(parentCSVDirectory, subdirectory);
-    }
-  }
 
   // After parsing CSV files, populate JSON
   for (const subdirectory of subdirectories) {
@@ -156,7 +152,7 @@ const subdirectories = fs.readdirSync(directoryPath);
 
   console.log(outputJson);
 
-  const jsonFilePath = 'output.js'; // Replace with your desired output JSON file path
+  const jsonFilePath = 'Data.js'; // Replace with your desired output JSON file path
   fs.writeFileSync(jsonFilePath, `var data = ${JSON.stringify(outputJson, null, 2)}`);
   console.log(`JSON data written to ${jsonFilePath}`);
 })();
